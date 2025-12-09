@@ -15,6 +15,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+    platform: linux/amd64
     image: freeradius-entra-id
     build: .
     command: freeradius -X
@@ -25,6 +26,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+    platform: linux/amd64
     image: freeradius-entra-id
     command: freeradius -X
 

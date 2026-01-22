@@ -62,7 +62,7 @@ The configuration described here also adds support for **account lockout** based
 
 ### Configure account lockout after repeatedly failed login attempts
 
-4. Create a PostgreSQL user and database for FreeRADIUS.
+1. Create a PostgreSQL user and database for FreeRADIUS.
 
    With Docker, this can be done automatically by configuring the `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_DB` environment variables (see [`compose.yaml`](compose.yaml) for an example).
 
@@ -82,7 +82,7 @@ The configuration described here also adds support for **account lockout** based
 
    to create a new user called `freeradius`, with a secure password choosen by you, with complete access to the newly created `freeradius` database.
 
-5. Initialize the required tables in the newly-created database.
+2. Initialize the required tables in the newly-created database.
 
    If using Docker, you can define a database initialization script to be run when the container is first created. See the [`create-database.sh`](config/postgresql/create-database.sh) script and the corresponding lines in [`compose.yaml`](compose.yaml).
 
@@ -103,19 +103,19 @@ The configuration described here also adds support for **account lockout** based
    CREATE INDEX failed_logins_username_index ON failed_logins (username);
    ```
 
-6. Enable the SQL module for FreeRADIUS, by linking the corresponding file from the `mods-available` directory to the `mods-enabled` directory (e.g. something like `ln -s /etc/freeradius/mods-available/sql /etc/freeradius/mods-enabled/`).
+3. Enable the SQL module for FreeRADIUS, by linking the corresponding file from the `mods-available` directory to the `mods-enabled` directory (e.g. something like `ln -s /etc/freeradius/mods-available/sql /etc/freeradius/mods-enabled/`).
 
-7. Configure the SQL module (you can use [the configuration from this repo](config/freeradius/mods-available/sql) as a guiding example).
+4. Configure the SQL module (you can use [the configuration from this repo](config/freeradius/mods-available/sql) as a guiding example).
 
    You'll want to set `dialect = "postgresql"`, `driver = "rlm_sql_${dialect}"` (the exact name of the driver depends on which distribution of FreeRADIUS you're using), as well as the `server`, `port`, `login`, `password` and `radius_db` attributes (use the values you've defined when setting up the PostgreSQL database).
 
    Since we're only interested in using PostgreSQL to track failed login attempts, we can disable other integrations by setting `read_groups = no`, `read_profiles = no` and `read_clients = no`. Also remember to comment out / remove any references to the `sql` module in your default site's config file (see [the config in this repo for an example](config/freeradius/sites-available/default)).
 
-8. Set up the lockout policy. This is mostly based on the [official guide](https://wiki.freeradius.org/guide/lockout) for adding account lockout to FreeRADIUS.
+5. Set up the lockout policy. This is mostly based on the [official guide](https://wiki.freeradius.org/guide/lockout) for adding account lockout to FreeRADIUS.
 
    Copy the [`lockout`](config/freeradius/policy.d/lockout) policy file to your `/etc/freeradius/policy.d` directory and update the [default site's config](config/freeradius/sites-available/default):
 
-   ```
+   ```json
    authorize {
      lockout_check
      ...
@@ -130,7 +130,7 @@ The configuration described here also adds support for **account lockout** based
 
    The default lockout policy is configured to block all login attempts (even ones with correct credentials) after 5 failed attempts in the last 10 minutes. This is done to discourage brute force / password guessing attacks.
 
-9. Verify that the newly configured lockout policy works as expected. Try to connect once with valid credentials:
+6. Verify that the newly configured lockout policy works as expected. Try to connect once with valid credentials:
 
    ```sh
    ./test-connection.sh user@tenant.onmicrosoft.com <password>
@@ -155,9 +155,9 @@ The configuration described here also adds support for **account lockout** based
 
 ### Use Redis for persistently caching password hashes
 
-10. It's a good idea to secure your Redis instance with a password (which is not done by default). See [this SO answer](https://stackoverflow.com/a/7548743/5723188) for instructions, or adapt the [`redis.conf`](config/redis/redis.conf) file from this repo.
+1. It's a good idea to secure your Redis instance with a password (which is not done by default). See [this SO answer](https://stackoverflow.com/a/7548743/5723188) for instructions, or adapt the [`redis.conf`](config/redis/redis.conf) file from this repo.
 
-11. Configure the `freeradius-oauth-perl` module to use Redis as a cache, instead of the in-memory RB tree implementation.
+2. Configure the `freeradius-oauth-perl` module to use Redis as a cache, instead of the in-memory RB tree implementation.
 
     This can be done by updating the `module` file (usually located at `/opt/freeradius-oauth2-perl/module` if you've followed the official installation instructions). Replace it with the [variant of the file](config/freeradius-oauth2-perl/module) from this repo, or make the changes yourself:
 
@@ -188,7 +188,7 @@ The configuration described here also adds support for **account lockout** based
 
     Depending on how you've set up the `freeradius-oauth-perl` module, you might also have to update the corresponding line in the `/etc/freeradius/dictionary` file.
 
-12. Verify that the new caching config works correctly. Restart your FreeRADIUS instance, then try to connect _twice_ using valid credentials:
+3. Verify that the new caching config works correctly. Restart your FreeRADIUS instance, then try to connect _twice_ using valid credentials:
 
     ```shell
     ./test-connection.sh user@tenant.onmicrosoft.com <password>
@@ -198,6 +198,7 @@ The configuration described here also adds support for **account lockout** based
     The second time around, authentication should be nearly instant. You should find some similar log messages (if you're running FreeRADIUS in debug mode):
 
     ```
+
     rlm_redis (redis): Reserved connection (0)
     (3) oauth2_cache: Found entry for "user@tenant.onmicrosoft.com"
     (3) oauth2_cache: Merging cache entry into request
@@ -211,7 +212,7 @@ It is woth mentioning that Redis has support for **data persistency** and it wil
 
 ### Set up multiple FreeRADIUS instances for redundancy
 
-13. One way of ensuring redundancy is to spin up multiple FreeRADIUS instances (with identical configurations) and place them behind a [_load balancer_](https://www.nginx.com/resources/glossary/load-balancing/).
+1. One way of ensuring redundancy is to spin up multiple FreeRADIUS instances (with identical configurations) and place them behind a [_load balancer_](https://www.nginx.com/resources/glossary/load-balancing/).
 
     The [`compose.yaml`](compose.yaml) file exemplifies the creation of a cluster of two FreeRADIUS instances, both sharing the same database and password cache. Either one can be the target of a RADIUS authentication request.
 

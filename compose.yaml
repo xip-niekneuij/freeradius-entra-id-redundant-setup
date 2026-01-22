@@ -3,7 +3,7 @@ services:
     depends_on:
       - freeradius1
       - freeradius2
-    image: nginx:1.25
+    image: nginx:stable
     ports:
       - "1812:1812/udp"
     volumes:
@@ -15,6 +15,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+    platform: linux/amd64
     image: freeradius-entra-id
     build: .
     command: freeradius -X
@@ -25,6 +26,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+    platform: linux/amd64
     image: freeradius-entra-id
     command: freeradius -X
 
@@ -50,9 +52,9 @@ services:
   # It's also possible to set up a highly-available cluster of Redis nodes,
   # see https://www.merge.dev/blog/how-to-spin-up-redis-cluster-in-docker
   redis:
-    image: redis:7.2
+    image: valkey/valkey:7
     ports:
       - "6379:6379"
     volumes:
-      - ./config/redis/redis.conf:/etc/redis/redis.conf:ro
-    command: ["redis-server", "/etc/redis/redis.conf"]
+      - ./config/redis/redis.conf:/usr/local/etc/valkey/redis.conf:ro
+    command: ["redis-server", "/usr/local/etc/valkey/redis.conf"]

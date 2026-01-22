@@ -182,8 +182,8 @@ The configuration described here also adds support for **account lockout** based
     There is currently a [bug](https://github.com/FreeRADIUS/freeradius-server/issues/5304) with the way FreeRADIUS serializes dates stored in external caches. Until it gets fixed, you will also have to update the [`dictionary`](config/freeradius-oauth2-perl/dictionary) file:
 
     ```ini
-    # ATTRIBUTE	OAuth2-Password-Last-Modified	3000	date # This line has been commented out...
-    ATTRIBUTE	OAuth2-Password-Last-Modified	3000	string # ...with this line taking its place.
+    # ATTRIBUTE OAuth2-Password-Last-Modified 3000 date # This line has been commented out...
+    ATTRIBUTE OAuth2-Password-Last-Modified 3000 string # ...with this line taking its place.
     ```
 
     Depending on how you've set up the `freeradius-oauth-perl` module, you might also have to update the corresponding line in the `/etc/freeradius/dictionary` file.

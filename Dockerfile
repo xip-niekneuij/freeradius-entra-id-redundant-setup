@@ -1,4 +1,4 @@
-FROM freeradius/freeradius-server:latest-3.2
+FROM --platform=linux/amd64 freeradius/freeradius-server:latest
 
 # Update apt package lists to allow installing new software
 RUN apt-get update
